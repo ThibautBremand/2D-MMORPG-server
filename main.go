@@ -1,14 +1,15 @@
 package main
 
 import (
-	"server/communication"
-	"server/db"
 	"flag"
 	"fmt"
-	"github.com/joho/godotenv"
 	"log"
 	"mime"
 	"net/http"
+	"server/communication"
+	"server/db"
+
+	"github.com/joho/godotenv"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
@@ -16,7 +17,7 @@ var addr = flag.String("addr", ":8080", "http service address")
 // prepareConfig stets up mandatory settings.
 func prepareConfig() {
 	mime.AddExtensionType(".js", "application/javascript; charset=utf-8")
-	http.Handle("/front/", http.StripPrefix("/front/", http.FileServer(http.Dir("front"))))
+	http.Handle("/client/", http.StripPrefix("/client/", http.FileServer(http.Dir("client"))))
 }
 
 // startDatabases connects to the storage and the redis.
@@ -48,7 +49,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	http.ServeFile(w, r, "home.html")
+	http.ServeFile(w, r, "./client/home.html")
 }
 
 func startWebServer() {
