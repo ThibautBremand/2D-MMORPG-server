@@ -25,10 +25,8 @@ func init() {
 }
 
 func main() {
-	webserver.PrepareConfig()
 	startDatabases()
 	defer db.Close()
 
-	webserver.StartHub()
-	webserver.StartWebServer()
+	webserver.Launch()
 }

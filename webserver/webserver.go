@@ -1,37 +1,41 @@
 package webserver
 
 import (
-	"flag"
 	"fmt"
 	"log"
-	"mime"
 	"net/http"
 	"server/communication"
 	"server/config"
+
+	"github.com/gorilla/mux"
 )
 
-var addr = flag.String("addr", ":8080", "http service address")
+var r *mux.Router
 
-// prepareConfig stets up mandatory settings.
-func PrepareConfig() {
-	mime.AddExtensionType(".js", "application/javascript; charset=utf-8")
-
-	// Serve the deployed client at "/client/" path
+func Launch() {
 	clientPath := config.EnvVar("CLIENT_PATH")
-	http.Handle("/client/", http.FileServer(http.Dir(clientPath)))
+
+	r = mux.NewRouter()
+	r.PathPrefix("/client/").Handler(http.FileServer(http.Dir(clientPath)))
+
+	startHub()
+
+	// Bind to a port and pass our router in
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
 
 // startHub launches the Hub which stores all the WebSocket clients.
-func StartHub() {
+func startHub() {
 	hub := communication.NewHub()
 	go hub.Run()
-	http.HandleFunc("/", serveHome)
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/", serveHome)
+	r.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		params := r.URL.Query()
 		communication.ServeWs(hub, w, r, params["name"][0])
 	})
 }
 
+// serveHome serves the html frontpage.
 func serveHome(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL)
 	if r.URL.Path != "/" {
@@ -48,11 +52,4 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		clientPath = fmt.Sprintf("%s/", clientPath)
 	}
 	http.ServeFile(w, r, fmt.Sprintf("%sclient/home.html", clientPath))
-}
-
-func StartWebServer() {
-	err := http.ListenAndServe(*addr, nil)
-	if err != nil {
-		log.Fatal("ListenAndServe: ", err)
-	}
 }
