@@ -10,6 +10,7 @@ import (
 	"server/config"
 	"server/controller"
 	"server/utils"
+	"strings"
 
 	"github.com/gorilla/mux"
 )
@@ -79,7 +80,7 @@ func newCharacter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Printf("New character data (name: %s) has been received from a user", characterData.Name)
-	err = controller.PersistNewCharacter(characterData.Name, characterData.Tiles)
+	err = controller.PersistNewCharacter(strings.ToLower(characterData.Name), characterData.Tiles)
 	var e *utils.UsernameTaken
 	if errors.As(err, &e) {
 		w.WriteHeader(http.StatusAlreadyReported)
