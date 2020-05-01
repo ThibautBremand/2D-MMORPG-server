@@ -7,6 +7,7 @@ import (
 	"mime"
 	"net/http"
 	"server/communication"
+	"server/config"
 	"server/db"
 
 	"github.com/joho/godotenv"
@@ -49,7 +50,9 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	http.ServeFile(w, r, "./client/home.html")
+
+	clientPath := config.EnvVar("CLIENT_PATH")
+	http.ServeFile(w, r, fmt.Sprintf("%s/client/home.html", clientPath))
 }
 
 func startWebServer() {
