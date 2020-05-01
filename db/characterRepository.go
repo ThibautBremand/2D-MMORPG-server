@@ -6,8 +6,14 @@ package db
 import (
 	"fmt"
 	"server/entity"
+	"server/utils"
 	"strconv"
+	"strings"
 )
+
+const defaultGamemapID = 1
+const defaultXPosition = 10
+const defaultYPosition = 10
 
 //
 // RDBS (PostGreSQL)
@@ -16,7 +22,7 @@ import (
 // FindCharacterByName returns a Character object from the db using the given name.
 func FindCharacterByName(name string) entity.Character {
 	var character entity.Character
-	DB.Preload("Gamemap").Where("name = ?", name).Find(&character)
+	DB.Preload("Gamemap").Where("name = ?", strings.ToLower(name)).Find(&character)
 
 	return character
 }
@@ -24,15 +30,31 @@ func FindCharacterByName(name string) entity.Character {
 // PersistCharacterByName retrieves a character's data from the Redis, using the given name,
 // and updates the corresponding Character entry in the DBs.
 func PersistCharacterByName(name string) {
-	keys, _ := ScanKeys("", fmt.Sprintf("-%s", name))
+	keys, _ := ScanKeys("", fmt.Sprintf("-%s", strings.ToLower(name)))
 	if len(keys) != 1 {
 		return
 	}
 	key := keys[0]
 
 	character := FindCharacterRedis(key)
-	var model entity.Character
-	DB.Model(&model).Where("name = ?", name).Update(map[string]interface{}{"x": character.X, "y": character.Y, "tileFormula": character.TileFormula, "gamemap_id": character.GamemapID})
+	DB.Model(&entity.Character{}).Where("name = ?", strings.ToLower(name)).Update(map[string]interface{}{"x": character.X, "y": character.Y, "tileFormula": character.TileFormula, "gamemap_id": character.GamemapID})
+}
+
+func PersistNewCharacter(name string, tiles string) error {
+	var count int64
+	DB.Model(&entity.Character{}).Where("name = ?", strings.ToLower(name)).Count(&count)
+	if count > 0 {
+		return &utils.UsernameTaken{Err: fmt.Errorf("the username is already taken")}
+	}
+	character := entity.Character{
+		Name:        strings.ToLower(name),
+		TileFormula: tiles,
+		GamemapID:   defaultGamemapID,
+		X:           defaultXPosition,
+		Y:           defaultYPosition,
+	}
+	DB.Model(&entity.Character{}).Create(&character)
+	return nil
 }
 
 //
@@ -41,13 +63,13 @@ func PersistCharacterByName(name string) {
 
 // PersistCharacterRedis stores the given Character object into Redis.
 func PersistCharacterRedis(character entity.Character) {
-	key := fmt.Sprintf("%s-%s", character.Gamemap.Name, character.Name)
-	values :=  map[string]interface{}{
-		"x": strconv.Itoa(character.X),
-		"y": strconv.Itoa(character.Y),
+	key := fmt.Sprintf("%s-%s", character.Gamemap.Name, strings.ToLower(character.Name))
+	values := map[string]interface{}{
+		"x":           strconv.Itoa(character.X),
+		"y":           strconv.Itoa(character.Y),
 		"tileFormula": character.TileFormula,
-		"name": character.Name,
-		"gamemap": character.Gamemap.ID,
+		"name":        strings.ToLower(character.Name),
+		"gamemap":     character.Gamemap.ID,
 	}
 
 	Redis.HMSet(key, values)
@@ -58,7 +80,7 @@ func UpdateCharacterRedis(key string, values map[string]interface{}) {
 }
 
 func DeleteCharacterRedis(name string) {
-	keys, _ := ScanKeys("", fmt.Sprintf("-%s", name))
+	keys, _ := ScanKeys("", fmt.Sprintf("-%s", strings.ToLower(name)))
 	if len(keys) != 1 {
 		return
 	}
@@ -68,7 +90,7 @@ func DeleteCharacterRedis(name string) {
 
 // KeyByNameRedis returns a Redis key using the given character name.
 func KeyByNameRedis(characterName string) *string {
-	keys, _ := ScanKeys("", fmt.Sprintf("-%s", characterName))
+	keys, _ := ScanKeys("", fmt.Sprintf("-%s", strings.ToLower(characterName)))
 	if len(keys) < 1 {
 		return nil
 	}
@@ -84,11 +106,11 @@ func FindCharacterRedis(key string) *entity.CharacterView {
 	gamemapID, _ := strconv.Atoi(value["gamemap"])
 
 	return &entity.CharacterView{
-		Name: value["name"],
-		X: x,
-		Y: y,
+		Name:        strings.ToLower(value["name"]),
+		X:           x,
+		Y:           y,
 		TileFormula: value["tileFormula"],
-		GamemapID: gamemapID,
+		GamemapID:   gamemapID,
 	}
 }
 
