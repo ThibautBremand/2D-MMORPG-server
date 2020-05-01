@@ -7,6 +7,7 @@ import (
 	"mime"
 	"net/http"
 	"server/communication"
+	"server/config"
 	"server/db"
 
 	"github.com/joho/godotenv"
@@ -17,7 +18,10 @@ var addr = flag.String("addr", ":8080", "http service address")
 // prepareConfig stets up mandatory settings.
 func prepareConfig() {
 	mime.AddExtensionType(".js", "application/javascript; charset=utf-8")
-	http.Handle("/client/", http.StripPrefix("/client/", http.FileServer(http.Dir("client"))))
+
+	// Serve the deployed client at "/client/" path
+	clientPath := config.EnvVar("CLIENT_PATH")
+	http.Handle("/client/", http.FileServer(http.Dir(clientPath)))
 }
 
 // startDatabases connects to the storage and the redis.
@@ -49,7 +53,12 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	http.ServeFile(w, r, "./client/home.html")
+
+	clientPath := config.EnvVar("CLIENT_PATH")
+	if clientPath[len(clientPath)-1:] != "/" {
+		clientPath = fmt.Sprintf("%s/", clientPath)
+	}
+	http.ServeFile(w, r, fmt.Sprintf("%sclient/home.html", clientPath))
 }
 
 func startWebServer() {
