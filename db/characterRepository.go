@@ -6,8 +6,13 @@ package db
 import (
 	"fmt"
 	"server/entity"
+	"server/utils"
 	"strconv"
 )
+
+const defaultGamemapID = 1
+const defaultXPosition = 10
+const defaultYPosition = 10
 
 //
 // RDBS (PostGreSQL)
@@ -31,8 +36,24 @@ func PersistCharacterByName(name string) {
 	key := keys[0]
 
 	character := FindCharacterRedis(key)
-	var model entity.Character
-	DB.Model(&model).Where("name = ?", name).Update(map[string]interface{}{"x": character.X, "y": character.Y, "tileFormula": character.TileFormula, "gamemap_id": character.GamemapID})
+	DB.Model(&entity.Character{}).Where("name = ?", name).Update(map[string]interface{}{"x": character.X, "y": character.Y, "tileFormula": character.TileFormula, "gamemap_id": character.GamemapID})
+}
+
+func PersistNewCharacter(name string, tiles string) error {
+	var count int64
+	DB.Model(&entity.Character{}).Where("name = ?", name).Count(&count)
+	if count > 0 {
+		return &utils.UsernameTaken{Err: fmt.Errorf("the username is already taken")}
+	}
+	character := entity.Character{
+		Name:        name,
+		TileFormula: tiles,
+		GamemapID:   defaultGamemapID,
+		X:           defaultXPosition,
+		Y:           defaultYPosition,
+	}
+	DB.Model(&entity.Character{}).Create(&character)
+	return nil
 }
 
 //
@@ -42,12 +63,12 @@ func PersistCharacterByName(name string) {
 // PersistCharacterRedis stores the given Character object into Redis.
 func PersistCharacterRedis(character entity.Character) {
 	key := fmt.Sprintf("%s-%s", character.Gamemap.Name, character.Name)
-	values :=  map[string]interface{}{
-		"x": strconv.Itoa(character.X),
-		"y": strconv.Itoa(character.Y),
+	values := map[string]interface{}{
+		"x":           strconv.Itoa(character.X),
+		"y":           strconv.Itoa(character.Y),
 		"tileFormula": character.TileFormula,
-		"name": character.Name,
-		"gamemap": character.Gamemap.ID,
+		"name":        character.Name,
+		"gamemap":     character.Gamemap.ID,
 	}
 
 	Redis.HMSet(key, values)
@@ -84,11 +105,11 @@ func FindCharacterRedis(key string) *entity.CharacterView {
 	gamemapID, _ := strconv.Atoi(value["gamemap"])
 
 	return &entity.CharacterView{
-		Name: value["name"],
-		X: x,
-		Y: y,
+		Name:        value["name"],
+		X:           x,
+		Y:           y,
 		TileFormula: value["tileFormula"],
-		GamemapID: gamemapID,
+		GamemapID:   gamemapID,
 	}
 }
 

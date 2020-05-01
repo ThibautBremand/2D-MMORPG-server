@@ -18,6 +18,10 @@ func PersistCharacterByName(name string) {
 	db.PersistCharacterByName(name)
 }
 
+func PersistNewCharacter(name string, tiles string) error {
+	return db.PersistNewCharacter(name, tiles)
+}
+
 //
 // Cached Characters
 //
@@ -36,10 +40,10 @@ func PersistCharacterRedis(character entity.Character) {
 }
 
 func UpdateCharacterRedis(name string, x int, y int, tileFormula string, key string) {
-	values :=  map[string]interface{}{
-		"name": name,
-		"x": x,
-		"y": y,
+	values := map[string]interface{}{
+		"name":        name,
+		"x":           x,
+		"y":           y,
 		"tileFormula": tileFormula,
 	}
 
