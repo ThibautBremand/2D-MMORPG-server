@@ -39,6 +39,7 @@ func startHub() {
 		communication.ServeWs(hub, w, r, params["name"][0])
 	})
 	r.HandleFunc("/newcharacter", newCharacter).Methods("POST")
+	r.HandleFunc("/newgamemap", newGamemap).Methods("POST")
 }
 
 // serveHome serves the html frontpage.
@@ -60,9 +61,12 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, fmt.Sprintf("%sclient/home.html", clientPath))
 }
 
-type NewCharacterData struct {
+// newEntityData contains the name and the JSON properties of a new entity
+// that a user has just created using the /newcharacter and /newgamemap endpoints.
+// This entity is meant to be persisted into the storage.
+type newEntityData struct {
 	Name  string
-	Tiles string
+	Props string
 }
 
 type responseServer struct {
@@ -71,17 +75,41 @@ type responseServer struct {
 
 func newCharacter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	var characterData NewCharacterData
-	err := json.NewDecoder(r.Body).Decode(&characterData)
+	characterData, err := decode(w, r)
+	if err != nil {
+		return
+	}
+	fmt.Printf("New character data (name: %s) has been received from a user", characterData.Name)
+	err = controller.PersistNewCharacter(strings.ToLower(characterData.Name), characterData.Props)
+	respond(w, err)
+}
+
+func newGamemap(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	gamemapData, err := decode(w, r)
+	if err != nil {
+		return
+	}
+	fmt.Printf("New gamemap data (name: %s) has been received from a user", gamemapData.Name)
+	err = controller.PersistNewGamemap(strings.ToLower(gamemapData.Name), gamemapData.Props)
+	respond(w, err)
+}
+
+func decode(w http.ResponseWriter, r *http.Request) (newEntityData, error) {
+	var entityData newEntityData
+	err := json.NewDecoder(r.Body).Decode(&entityData)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		fmt.Println(err.Error())
 		w.Write([]byte("KO"))
-		return
+		return entityData, err
 	}
-	fmt.Printf("New character data (name: %s) has been received from a user", characterData.Name)
-	err = controller.PersistNewCharacter(strings.ToLower(characterData.Name), characterData.Tiles)
-	var e *utils.UsernameTaken
+
+	return entityData, nil
+}
+
+func respond(w http.ResponseWriter, err error) {
+	var e *utils.NameAlreadyTaken
 	if errors.As(err, &e) {
 		w.WriteHeader(http.StatusAlreadyReported)
 		w.Write([]byte("KO"))

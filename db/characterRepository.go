@@ -40,11 +40,12 @@ func PersistCharacterByName(name string) {
 	DB.Model(&entity.Character{}).Where("name = ?", strings.ToLower(name)).Update(map[string]interface{}{"x": character.X, "y": character.Y, "tileFormula": character.TileFormula, "gamemap_id": character.GamemapID})
 }
 
+// PersistNewCharacter create a new character into the storage, using the data sent by the user.
 func PersistNewCharacter(name string, tiles string) error {
 	var count int64
 	DB.Model(&entity.Character{}).Where("name = ?", strings.ToLower(name)).Count(&count)
 	if count > 0 {
-		return &utils.UsernameTaken{Err: fmt.Errorf("the username is already taken")}
+		return &utils.NameAlreadyTaken{Err: fmt.Errorf("the username is already taken")}
 	}
 	character := entity.Character{
 		Name:        strings.ToLower(name),
