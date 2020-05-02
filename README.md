@@ -8,8 +8,10 @@ This server handles communications from users, and interacts with the databases 
 
 - Clone the repo
 - Launch a local Redis instance (default port will be 6379)
+    * Docker (recommended): *docker run --name some-redis -p 6379:6379 -d redis*
     * Ubuntu: *sudo service redis-server start*
 - Launch a local PostgreSQL instance
+    * Docker (recommended): [See Wiki page](https://github.com/ThibautBremand/2D-MMORPG-server/wiki/Configure-local-PostgreSQL-with-Docker)
     * Ubuntu: *sudo service postgresql start*
 - Make sure you have data in your *Character* and *Gamemap* PostgreSQL tables.
   - Will be detailed later
