@@ -13,12 +13,11 @@ This server handles communications from users, and interacts with the databases 
 - Launch a local PostgreSQL instance
     * Docker (recommended): [See Wiki page](https://github.com/ThibautBremand/2D-MMORPG-server/wiki/Configure-local-PostgreSQL-with-Docker)
     * Ubuntu: *sudo service postgresql start*
-- Make sure you have data in your *Character* and *Gamemap* PostgreSQL tables.
-  - Will be detailed later
 - Create a .env file based on the .env.sample model, and fill the values.
   - **Note:** CLIENT_PATH value must correspond to the DEPLOY_PATH value of the client. That way, once you deploy the client (cf. https://github.com/ThibautBremand/2D-MMORPG-client), it'll be directly served by the server to the users.
 - Build: *go build*
 - Run: *go run main.go*
+- Make sure you have data in your *Character* and *Gamemap* PostgreSQL tables.
 
 Please follow the steps detailed in the client's Readme file in order to correctly deploy the client.
 
