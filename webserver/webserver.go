@@ -19,9 +19,13 @@ var r *mux.Router
 
 func Launch() {
 	clientPath := config.EnvVar("CLIENT_PATH")
+	adminPath := config.EnvVar("ADMIN_PATH")
 
 	r = mux.NewRouter()
 	r.PathPrefix("/client/").Handler(http.FileServer(http.Dir(clientPath)))
+
+	// For Character and Gamemap administration pages
+	r.PathPrefix("/admin/").Handler(http.FileServer(http.Dir(adminPath)))
 
 	startHub()
 
@@ -38,8 +42,12 @@ func startHub() {
 		params := r.URL.Query()
 		communication.ServeWs(hub, w, r, params["name"][0])
 	})
+
+	// For Character and Gamemap administration pages
 	r.HandleFunc("/newcharacter", newCharacter).Methods("POST")
 	r.HandleFunc("/newgamemap", newGamemap).Methods("POST")
+	r.HandleFunc("/character", serveCharacterPage)
+	r.HandleFunc("/gamemap", serveGamemapPage)
 }
 
 // serveHome serves the html frontpage.
@@ -59,6 +67,44 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		clientPath = fmt.Sprintf("%s/", clientPath)
 	}
 	http.ServeFile(w, r, fmt.Sprintf("%sclient/home.html", clientPath))
+}
+
+// For Character administration page
+func serveCharacterPage(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL)
+	if r.URL.Path != "/character" {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	adminPath := config.EnvVar("ADMIN_PATH")
+	if adminPath[len(adminPath)-1:] != "/" {
+		adminPath = fmt.Sprintf("%s/", adminPath)
+	}
+	http.ServeFile(w, r, fmt.Sprintf("%sadmin/index.html", adminPath))
+}
+
+// For Gamemap administration page
+func serveGamemapPage(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL)
+	if r.URL.Path != "/gamemap" {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	adminPath := config.EnvVar("ADMIN_PATH")
+	if adminPath[len(adminPath)-1:] != "/" {
+		adminPath = fmt.Sprintf("%s/", adminPath)
+	}
+	http.ServeFile(w, r, fmt.Sprintf("%sadmin/loadmap.html", adminPath))
 }
 
 // newEntityData contains the name and the JSON properties of a new entity
