@@ -22,6 +22,10 @@ func PersistNewCharacter(name string, tiles string) error {
 	return db.PersistNewCharacter(name, tiles)
 }
 
+func PersistNewGamemap(name string, jsonMap string) error {
+	return db.PersistNewGamemap(name, jsonMap)
+}
+
 //
 // Cached Characters
 //
