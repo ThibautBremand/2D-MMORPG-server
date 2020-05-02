@@ -4,7 +4,14 @@ For the client, please see https://github.com/ThibautBremand/2D-MMORPG-client
 
 This server handles communications from users, and interacts with the databases accordingly. It uses Redis and PostgreSQL.
 
-#### Local installation
+## Demo!  
+Go to http://51.91.158.243:8080/ and start playing using these usernames:
+- demo
+- demo2
+
+You can also create new characters using the following page: http://51.91.158.243:8080/character
+
+## Local installation
 
 - Clone the repo
 - Launch a local Redis instance (default port will be 6379)
