@@ -1,6 +1,7 @@
 # 2D-MMORPG-server
-The server for 2D-MMORPG, written in Golang.
-For the client, please see https://github.com/ThibautBremand/2D-MMORPG-client
+The server for 2D-MMORPG, written in Golang.  
+For the client, please see https://github.com/ThibautBremand/2D-MMORPG-client  
+For the characters and gamemaps creation interfaces, please see https://github.com/ThibautBremand/2D-MMORPG-character-creator  
 
 This server handles communications from users, and interacts with the databases accordingly. It uses Redis and PostgreSQL.
 
@@ -26,7 +27,8 @@ You can also create new characters using the following page: http://51.91.158.24
 - Run: *go run main.go*
 - Make sure you have data in your *Character* and *Gamemap* PostgreSQL tables.
 
-Please follow the steps detailed in the client's Readme file in order to correctly deploy the client.
+Please follow the steps detailed in the client's Readme file in order to correctly deploy the client.  
+Please also follow the steps in the characters and gamemaps creation interfaces' Readme in order to correctly deploy them as well.
 
 ## 2k20 Reborn!
 This project is a new version of this one made in PHP with Symfony, in 2015:
