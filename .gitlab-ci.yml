@@ -1,0 +1,73 @@
+variables:
+  DOCKER_HOST: tcp://docker:2375
+
+stages:
+  - "test"
+  - "build"
+  - "client"
+  - "deploy"
+
+test:
+  stage: "test"
+  image: "golang:1.13.4-buster"
+  script:
+    - "make test"
+
+build:
+  stage: "build"
+  image: "golang:1.13.4-buster"
+  script:
+    - "make build"
+  artifacts:
+    paths:
+      - "server"
+
+client:
+  stage: "client"
+  image: "debian:buster"
+
+  before_script:
+    - |
+      apt-get update -qq && \
+      apt-get install -y -qq git && \
+      apt-get install -y -qq npm
+
+  script:
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/thibautbremand/2D-MMORPG-client.git
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/thibautbremand/2D-MMORPG-character-creator.git
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.com/thibautbremand/assets.git
+    - cd 2D-MMORPG-client
+    - git submodule update --init --recursive
+    - npm install
+    - npm run build
+    - cd ../2D-MMORPG-character-creator
+    - git submodule update --init --recursive
+  artifacts:
+    paths:
+      - 2D-MMORPG-client
+      - $ADMIN_PATH
+      - assets
+
+deploy:
+  stage: "deploy"
+  image: docker:latest
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - |
+      docker build -t registry.gitlab.com/thibautbremand/2d-mmorpg-server \
+      --build-arg DB_NAME=$DB_NAME \
+      --build-arg DB_PASS=$DB_PASS \
+      --build-arg DB_USER=$DB_USER \
+      --build-arg DB_HOST=$DB_HOST \
+      --build-arg DB_PORT=$DB_PORT \
+      --build-arg REDIS_HOST=$REDIS_HOST \
+      --build-arg REDIS_PORT=$REDIS_PORT \
+      --build-arg REDIS_PASS=$REDIS_PASS \
+      --build-arg REDIS_DB=$REDIS_DB \
+      --build-arg CLIENT_PATH=$CLIENT_PATH \
+      --build-arg ADMIN_PATH=$ADMIN_PATH \
+      .
+    - docker push registry.gitlab.com/thibautbremand/2d-mmorpg-server
+  services:
+    - "docker:18.09-dind"

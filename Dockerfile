@@ -3,8 +3,47 @@ FROM debian:buster
 RUN apt-get update && \
     apt-get upgrade -y
 
-# Deploy component
+ARG DB_NAME
+ARG DB_PASS
+ARG DB_USER
+ARG DB_HOST
+ARG DB_PORT
+ARG REDIS_HOST
+ARG REDIS_PORT
+ARG REDIS_PASS
+ARG REDIS_DB
+ARG CLIENT_PATH
+ARG ADMIN_PATH
+
+ENV DB_NAME=$DB_NAME
+ENV DB_PASS=$DB_PASS
+ENV DB_USER=$DB_USER
+ENV DB_HOST=$DB_HOST
+ENV DB_PORT=$DB_PORT
+ENV REDIS_HOST=$REDIS_HOST
+ENV REDIS_PORT=$REDIS_PORT
+ENV REDIS_PASS=$REDIS_PASS
+ENV REDIS_DB=$REDIS_DB
+ENV ADMIN_PATH=$ADMIN_PATH
+
+ENV C_PATH=$CLIENT_PATH
+ENV CLIENT_PATH=/app/$CLIENT_PATH
+
+ENV A_PATH=$ADMIN_PATH
+ENV ADMIN_PATH=/app/$ADMIN_PATH
+
 RUN mkdir /app
 COPY server /app
+
+RUN mkdir -p ${CLIENT_PATH}client
+RUN mkdir -p ${CLIENT_PATH}client/Universal-LPC-spritesheet
+RUN mkdir -p ${CLIENT_PATH}client/tilesets
+
+COPY 2D-MMORPG-client/Universal-LPC-spritesheet ${CLIENT_PATH}client/Universal-LPC-spritesheet
+COPY assets/tilesets ${CLIENT_PATH}client/tilesets
+COPY $C_PATH ${CLIENT_PATH}client
+
+RUN mkdir -p ${ADMIN_PATH}admin
+COPY $A_PATH ${ADMIN_PATH}admin
 
 CMD [ "/app/server" ]

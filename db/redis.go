@@ -25,6 +25,11 @@ func Start() {
 		Password: pass,
 		DB:       db,
 	})
+
+	_, err = Redis.Ping().Result()
+	if err != nil {
+		log.Fatalf("error while connecting to Redis: %v", err)
+	}
 }
 
 // Return the list of keys that start with the given prefix
