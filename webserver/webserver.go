@@ -115,10 +115,6 @@ type newEntityData struct {
 	Props string
 }
 
-type responseServer struct {
-	Message string
-}
-
 func newCharacter(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	characterData, err := decode(w, r)
