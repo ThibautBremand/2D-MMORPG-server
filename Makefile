@@ -1,0 +1,2 @@
+test:
+	$(info No tests!)
