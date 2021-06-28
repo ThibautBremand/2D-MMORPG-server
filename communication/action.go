@@ -23,18 +23,18 @@ const (
 )
 
 type Action struct {
-	Key string
+	Key   string
 	Value interface{}
 }
 
 type Message struct {
-	Key string
+	Key   string
 	Value string
 }
 
 // InitGame gets the character of the user from the storage, persists it into Redis
 // and sends back data to this user.
-func InitGame(client *Client){
+func InitGame(client *Client) {
 	character := controller.FindCharacterByName(client.name)
 	controller.PersistCharacterRedis(character)
 
