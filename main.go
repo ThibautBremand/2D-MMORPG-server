@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"server/db"
 	"server/webserver"
@@ -12,7 +11,7 @@ import (
 // startDatabases connects to the storage and the redis.
 func startDatabases() {
 	if err := db.Open(); err != nil {
-		fmt.Printf("error %v", err)
+		log.Fatalf("error %v", err)
 	}
 	db.Start()
 }

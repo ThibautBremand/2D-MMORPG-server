@@ -48,6 +48,11 @@ func startHub() {
 	r.HandleFunc("/newgamemap", newGamemap).Methods("POST")
 	r.HandleFunc("/character", serveCharacterPage)
 	r.HandleFunc("/gamemap", serveGamemapPage)
+	r.HandleFunc("/test", func(writer http.ResponseWriter, request *http.Request) {
+		_, _ = writer.Write([]byte("Hello World"))
+	})
+
+	log.Printf("Server started")
 }
 
 // serveHome serves the html frontpage.
@@ -66,6 +71,7 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	if clientPath[len(clientPath)-1:] != "/" {
 		clientPath = fmt.Sprintf("%s/", clientPath)
 	}
+
 	http.ServeFile(w, r, fmt.Sprintf("%sclient/home.html", clientPath))
 }
 
@@ -113,10 +119,6 @@ func serveGamemapPage(w http.ResponseWriter, r *http.Request) {
 type newEntityData struct {
 	Name  string
 	Props string
-}
-
-type responseServer struct {
-	Message string
 }
 
 func newCharacter(w http.ResponseWriter, r *http.Request) {
